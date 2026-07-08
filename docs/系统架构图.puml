@@ -1,0 +1,37 @@
+@startuml UPIDS系统架构
+
+package "前端层" {
+    [Vue 3 + Element Plus] as FE
+    [Leaflet GIS地图] as GIS
+}
+
+package "后端层" {
+    [Spring Boot 3.2] as BE
+    [JWT认证] as Auth
+    [MyBatis-Plus] as MP
+    [异步任务队列] as Queue
+}
+
+package "AI服务层" {
+    [Python Flask] as Python
+    [深度学习模型] as Model
+}
+
+package "数据层" {
+    [PostgreSQL] as DB
+    [PostGIS] as PostGIS
+    [Redis] as Redis
+}
+
+FE --> BE : REST API
+FE --> GIS : 地图组件
+BE --> Auth : 认证校验
+BE --> MP : 数据访问
+BE --> Queue : 任务管理
+BE --> Python : HTTP调用
+Python --> Model : 推理请求
+BE --> DB : 业务数据
+BE --> PostGIS : 空间数据
+BE --> Redis : 缓存
+
+@enduml

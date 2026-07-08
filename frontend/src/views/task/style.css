@@ -1,0 +1,19 @@
+@import '../../styles/tablePage.css';
+
+.text-danger {
+  color: #f56c6c;
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.error-section {
+  margin-top: 8px;
+}

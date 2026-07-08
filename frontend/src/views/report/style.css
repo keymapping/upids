@@ -1,0 +1,16 @@
+@import '../../styles/tablePage.css';
+
+.font-bold {
+  font-weight: 600;
+}
+
+.report-section {
+  margin-bottom: 16px;
+}
+
+.report-section h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+}

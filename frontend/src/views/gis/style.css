@@ -1,0 +1,83 @@
+.gis-page {
+  height: 100%;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+
+.gis-page .control-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 280px;
+  z-index: 1000;
+  transition: opacity 0.3s;
+}
+
+.gis-page .control-panel.collapsed {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gis-page .panel-toggle-btn {
+  position: absolute;
+  top: 16px;
+  left: 304px;
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gis-page .control-panel.collapsed ~ .panel-toggle-btn {
+  left: 16px;
+}
+
+.gis-page .panel-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.gis-page .panel-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gis-page .layer-toggle {
+  margin-bottom: 8px;
+}
+
+.gis-page .legend {
+  margin-top: 4px;
+}
+
+.gis-page .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.gis-page .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.gis-page .map-area {
+  flex: 1;
+  height: 100%;
+}
+
+.gis-page .dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.gis-page .font-bold {
+  font-weight: 600;
+}

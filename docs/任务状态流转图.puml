@@ -1,0 +1,26 @@
+@startuml 任务状态流转
+
+[*] --> PENDING : 创建任务
+
+PENDING --> RUNNING : 队列消费
+
+RUNNING --> DONE : 识别成功
+
+RUNNING --> FAILED : 识别失败
+
+RUNNING --> PENDING : 服务不可用
+
+RUNNING --> PENDING : 超时回收
+
+FAILED --> PENDING : 重试(最多3次)
+
+FAILED --> [*] : 超过重试次数
+
+DONE --> [*] : 任务结束
+
+state PENDING #66BB6A
+state RUNNING #42A5F5
+state DONE #66BB6A
+state FAILED #EF5350
+
+@enduml

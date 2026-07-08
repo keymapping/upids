@@ -1,0 +1,90 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: upids-backend
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/upids?currentSchema=public
+    username: upids_admin
+    password: upids_admin_123
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 10000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.upids.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# Knife4j (Swagger)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.upids.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# UPIDS Custom Configuration
+upids:
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-production-at-least-256-bits-long}
+    expire-hours: 24
+  python:
+    base-url: http://localhost:5000
+    connect-timeout: 3000
+    read-timeout: 10000
+  upload:
+    path: ./uploads
+    allowed-types: jpg,jpeg,png,bmp
+    max-file-size: 20971520
+  alert:
+    severity-threshold: 4
+  cache:
+    pipeline-ttl: 300
+    defect-ttl: 180
+    stat-ttl: 600
+
+logging:
+  level:
+    root: INFO
+    com.upids: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

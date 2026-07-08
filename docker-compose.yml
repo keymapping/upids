@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgis/postgis:14-3.3
+    container_name: upids-postgres
+    environment:
+      POSTGRES_DB: upids
+      POSTGRES_USER: upids_admin
+      POSTGRES_PASSWORD: upids_admin_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/00_init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U upids_admin -d upids"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - upids-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: upids-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - upids-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: upids-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@upids.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/misc/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - upids-network
+
+networks:
+  upids-network:
+    driver: bridge

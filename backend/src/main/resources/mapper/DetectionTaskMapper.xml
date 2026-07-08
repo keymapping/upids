@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upids.mapper.DetectionTaskMapper">
+
+    <select id="selectTasksFiltered" resultType="java.util.Map">
+        SELECT dt.task_id as "taskId", dt.record_id as "recordId",
+               dt.status, dt.retry_count as "retryCount",
+               dt.error_message as "errorMessage",
+               dt.started_at as "startedAt", dt.finished_at as "finishedAt",
+               dt.created_at as "createdAt",
+               TO_CHAR(dt.created_at, 'YYYY-MM-DD HH24:MI:SS') as "createdAtStr",
+               TO_CHAR(dt.started_at, 'YYYY-MM-DD HH24:MI:SS') as "startedAtStr",
+               TO_CHAR(dt.finished_at, 'YYYY-MM-DD HH24:MI:SS') as "finishedAtStr",
+               EXTRACT(EPOCH FROM (dt.finished_at - dt.started_at))::INTEGER as "durationSeconds",
+               ir.pipeline_id as "pipelineId",
+               ir.image_name as "imageName",
+               ir.detection_result as "detectionResult",
+               ir.confidence_score as "confidenceScore",
+               p.pipeline_name as "pipelineName",
+               p.material_type as "materialType",
+               p.diameter as "diameter",
+               COALESCE(dc.defect_count, 0) as "defectCount",
+               COALESCE(dc.high_risk_count, 0) as "highRiskCount"
+        FROM detection_task dt
+        LEFT JOIN inspection_record ir ON dt.record_id = ir.record_id
+        LEFT JOIN pipeline p ON ir.pipeline_id = p.pipeline_id
+        LEFT JOIN (
+            SELECT record_id, COUNT(*) as "defect_count",
+                   SUM(CASE WHEN severity_level >= 4 THEN 1 ELSE 0 END) as "high_risk_count"
+            FROM defect GROUP BY record_id
+        ) dc ON dt.record_id = dc.record_id
+        <where>
+            <if test="status != null">AND dt.status = #{status}</if>
+            <if test="pipelineName != null">AND p.pipeline_name LIKE '%' || #{pipelineName} || '%'</if>
+            <if test="detectionResult != null">AND ir.detection_result = #{detectionResult}</if>
+            <if test="startTime != null">AND dt.created_at &gt;= #{startTime}</if>
+            <if test="endTime != null">AND dt.created_at &lt;= #{endTime}</if>
+        </where>
+        ORDER BY CASE dt.status WHEN 'running' THEN 1 WHEN 'pending' THEN 2 WHEN 'failed' THEN 3 WHEN 'done' THEN 4 END,
+                 COALESCE(dt.finished_at, dt.created_at) DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countFiltered" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM detection_task dt
+        LEFT JOIN inspection_record ir ON dt.record_id = ir.record_id
+        LEFT JOIN pipeline p ON ir.pipeline_id = p.pipeline_id
+        <where>
+            <if test="status != null">AND dt.status = #{status}</if>
+            <if test="pipelineName != null">AND p.pipeline_name LIKE '%' || #{pipelineName} || '%'</if>
+            <if test="detectionResult != null">AND ir.detection_result = #{detectionResult}</if>
+            <if test="startTime != null">AND dt.created_at &gt;= #{startTime}</if>
+            <if test="endTime != null">AND dt.created_at &lt;= #{endTime}</if>
+        </where>
+    </select>
+
+</mapper>

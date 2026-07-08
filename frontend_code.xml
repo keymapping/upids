@@ -1,0 +1,652 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE frontend PUBLIC "-//UPIDS//DTD Frontend 1.0//EN" "http://upids/dtd/frontend-1.0.dtd">
+
+<frontend name="UPIDS-Frontend" version="1.0.0" description="地下管线智能缺陷检测系统前端">
+  
+  <!-- ============================================ -->
+  <!-- 1. 项目配置 -->
+  <!-- ============================================ -->
+  <project>
+    <framework>Vue 3 + TypeScript</framework>
+    <build-tool>Vite 5</build-tool>
+    <ui-library>Element Plus</ui-library>
+    <state-management>Pinia</state-management>
+    <router>Vue Router 4</router>
+    <http-client>Axios</http-client>
+    <gis-library>Leaflet</gis-library>
+    <chart-library>ECharts</chart-library>
+    <port>3000</port>
+    <api-base-url>http://localhost:8080</api-base-url>
+  </project>
+
+  <!-- ============================================ -->
+  <!-- 2. 入口文件 -->
+  <!-- ============================================ -->
+  <entry>
+    <file name="main.ts" path="src/main.ts">
+      <code><![CDATA[
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import pinia from './stores'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import 'leaflet/dist/leaflet.css'
+
+const app = createApp(App)
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+app.use(pinia).use(router).use(ElementPlus).mount('#app')
+      ]]></code>
+    </file>
+    <file name="App.vue" path="src/App.vue">
+      <template><router-view /></template>
+      <script>/* App根组件 */</script>
+      <style><![CDATA[
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #app { width: 100%; height: 100%; overflow: hidden; }
+body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+      ]]></style>
+    </file>
+    <file name="index.html" path="index.html">
+      <content><![CDATA[
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UPIDS - 管道缺陷检测系统</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+      ]]></content>
+    </file>
+  </entry>
+
+  <!-- ============================================ -->
+  <!-- 3. 路由配置 -->
+  <!-- ============================================ -->
+  <router path="src/router/index.ts">
+    <routes>
+      <route id="Login" path="/login" component="views/login/index.vue" title="登录" hidden="true">
+        <guard type="beforeEnter">已登录则跳转首页</guard>
+      </route>
+      <route id="Layout" path="/" component="components/Layout.vue" redirect="/dashboard">
+        <child id="Dashboard" path="dashboard" title="首页" icon="HomeFilled" roles="admin,user"/>
+        <child id="Pipeline" path="pipeline" title="管线管理" icon="Connection" roles="admin,user"/>
+        <child id="Inspection" path="inspection" title="检测记录" icon="Document" roles="admin,user"/>
+        <child id="GIS" path="gis" title="GIS地图" icon="Location" roles="admin,user"/>
+        <child id="Statistics" path="statistics" title="统计分析" icon="DataAnalysis" roles="admin,user"/>
+        <child id="Alert" path="alert" title="预警中心" icon="Bell" roles="admin,user"/>
+        <child id="Report" path="report" title="报告管理" icon="Document" roles="admin,user"/>
+        <child id="Task" path="task" title="任务管理" icon="List" roles="admin,user"/>
+        <child id="System" path="system" title="系统设置" icon="Setting" roles="admin"/>
+      </route>
+      <route id="Forbidden" path="/403" component="views/error/403.vue" title="无权限" hidden="true"/>
+      <route id="NotFound" path="/:pathMatch(.*)*" component="views/error/404.vue" title="页面不存在" hidden="true"/>
+    </routes>
+    <global-guard type="beforeEach">
+      <logic>白名单路由直接通过；无Token跳转登录；检查角色权限</logic>
+    </global-guard>
+  </router>
+
+  <!-- ============================================ -->
+  <!-- 4. 状态管理 -->
+  <!-- ============================================ -->
+  <store path="src/stores/">
+    <module id="user" file="user.ts">
+      <state name="token" type="string" persistence="localStorage"/>
+      <state name="userInfo" type="UserInfo" persistence="localStorage"/>
+      <action name="initUser" description="从localStorage恢复状态"/>
+      <action name="login" description="用户登录，保存token和用户信息"/>
+      <action name="logout" description="用户登出，清除状态"/>
+      <action name="hasRole" description="检查用户是否有指定角色"/>
+    </module>
+    <module id="alert" file="alert.ts">
+      <state name="unreadCount" type="number"/>
+      <action name="fetchUnreadCount" description="获取未读预警数量"/>
+    </module>
+  </store>
+
+  <!-- ============================================ -->
+  <!-- 5. HTTP请求封装 -->
+  <!-- ============================================ -->
+  <http path="src/utils/request.ts">
+    <config>
+      <baseURL>VITE_API_BASE_URL</baseURL>
+      <timeout>30000</timeout>
+      <content-type>application/json;charset=UTF-8</content-type>
+    </config>
+    <interceptor type="request">
+      <logic>自动在请求头添加 Authorization: Bearer {token}</logic>
+    </interceptor>
+    <interceptor type="response">
+      <logic>code=200返回数据；code=401跳转登录；其他错误提示消息</logic>
+    </interceptor>
+    <methods>
+      <method name="get" return-type="Promise&lt;ApiResult&lt;T&gt;&gt;"/>
+      <method name="post" return-type="Promise&lt;ApiResult&lt;T&gt;&gt;"/>
+      <method name="put" return-type="Promise&lt;ApiResult&lt;T&gt;&gt;"/>
+      <method name="del" return-type="Promise&lt;ApiResult&lt;T&gt;&gt;"/>
+      <method name="upload" return-type="Promise&lt;ApiResult&lt;T&gt;&gt;" description="文件上传"/>
+    </methods>
+  </http>
+
+  <!-- ============================================ -->
+  <!-- 6. API接口模块 -->
+  <!-- ============================================ -->
+  <api path="src/api/">
+    
+    <module id="auth" file="auth.ts">
+      <endpoint name="login" method="POST" path="/api/auth/login">
+        <request-body>{ username, password }</request-body>
+        <response-body>{ token, userId, username, role, realName }</response-body>
+      </endpoint>
+      <endpoint name="register" method="POST" path="/api/auth/register">
+        <request-body>{ username, password, realName? }</request-body>
+      </endpoint>
+      <endpoint name="getUserInfo" method="GET" path="/api/auth/me"/>
+    </module>
+
+    <module id="user" file="user.ts">
+      <endpoint name="getUserList" method="GET" path="/api/users">
+        <params>{ page, pageSize, username?, role?, status? }</params>
+      </endpoint>
+      <endpoint name="createUser" method="POST" path="/api/auth/register"/>
+      <endpoint name="updateUserStatus" method="PUT" path="/api/users/{id}/status"/>
+      <endpoint name="resetUserPassword" method="PUT" path="/api/users/{id}/reset-password"/>
+    </module>
+
+    <module id="pipeline" file="pipeline.ts">
+      <endpoint name="getPipelineList" method="GET" path="/api/pipelines"/>
+      <endpoint name="getAllPipelines" method="GET" path="/api/pipelines/all"/>
+      <endpoint name="getPipelineById" method="GET" path="/api/pipelines/{id}"/>
+      <endpoint name="createPipeline" method="POST" path="/api/pipelines"/>
+      <endpoint name="updatePipeline" method="PUT" path="/api/pipelines/{id}"/>
+      <endpoint name="deletePipeline" method="DELETE" path="/api/pipelines/{id}"/>
+      <endpoint name="batchDeletePipelines" method="POST" path="/api/pipelines/batch-delete"/>
+      <endpoint name="getPipelinesGeoJSON" method="GET" path="/api/pipelines/geojson"/>
+      <endpoint name="importPipeline" method="POST" path="/api/pipelines/import"/>
+    </module>
+
+    <module id="inspection" file="inspection.ts">
+      <endpoint name="getInspectionList" method="GET" path="/api/inspections"/>
+      <endpoint name="getInspectionById" method="GET" path="/api/inspections/{id}"/>
+      <endpoint name="uploadInspectionImage" method="POST" path="/api/inspections/upload" content-type="multipart/form-data"/>
+      <endpoint name="uploadInspectionBatch" method="POST" path="/api/inspections/upload-batch" content-type="multipart/form-data"/>
+      <endpoint name="getImageUrl" method="GET" path="/api/files/{recordId}" returns-url="true"/>
+    </module>
+
+    <module id="task" file="task.ts">
+      <endpoint name="getTaskList" method="GET" path="/api/tasks"/>
+      <endpoint name="getTaskById" method="GET" path="/api/tasks/{taskId}"/>
+      <endpoint name="retryTask" method="POST" path="/api/tasks/{taskId}/retry"/>
+    </module>
+
+    <module id="defect" file="defect.ts">
+      <endpoint name="getDefectList" method="GET" path="/api/defects"/>
+      <endpoint name="getDefectById" method="GET" path="/api/defects/{defectId}"/>
+      <endpoint name="getDefectsGeoJSON" method="GET" path="/api/defects/geojson"/>
+    </module>
+
+    <module id="alert" file="alert.ts">
+      <endpoint name="getAlertList" method="GET" path="/api/alerts"/>
+      <endpoint name="getUnreadCount" method="GET" path="/api/alerts/unread-count"/>
+      <endpoint name="markAlertAsRead" method="PUT" path="/api/alerts/{alertId}/read"/>
+      <endpoint name="markAllAlertsAsRead" method="PUT" path="/api/alerts/read-all"/>
+    </module>
+
+    <module id="statistics" file="statistics.ts">
+      <endpoint name="getStatisticsOverview" method="GET" path="/api/statistics/overview"/>
+    </module>
+
+    <module id="report" file="report.ts">
+      <endpoint name="getReportList" method="GET" path="/api/reports"/>
+      <endpoint name="getReportById" method="GET" path="/api/reports/{id}"/>
+      <endpoint name="generateReport" method="POST" path="/api/reports/generate"/>
+    </module>
+
+    <module id="log" file="log.ts">
+      <endpoint name="getLogList" method="GET" path="/api/logs"/>
+      <endpoint name="getMyLogs" method="GET" path="/api/logs/mine"/>
+    </module>
+
+    <module id="mock" file="mock.ts">
+      <endpoint name="generateMockData" method="POST" path="/api/mock/generate"/>
+      <endpoint name="getMockProgress" method="GET" path="/api/mock/generate/{jobId}"/>
+    </module>
+
+  </api>
+
+  <!-- ============================================ -->
+  <!-- 7. 通用组件 -->
+  <!-- ============================================ -->
+  <components path="src/components/">
+    
+    <component id="Layout" file="Layout.vue">
+      <structure>
+        <element name="el-aside" class="aside" description="侧边栏(可折叠)"/>
+        <element name="el-header" class="header" description="顶部导航栏"/>
+        <element name="el-main" class="main" description="主内容区"/>
+      </structure>
+      <features>动态菜单生成、面包屑导航、用户下拉菜单、预警徽章</features>
+      <props>无</props>
+      <events>无</events>
+      <code><![CDATA[
+<template>
+  <div class="layout-container">
+    <el-aside :width="isCollapse ? '64px' : '220px'" class="aside">
+      <div class="logo"><img src="@/assets/logo.svg" /><span>UPIDS</span></div>
+      <el-scrollbar><el-menu :default-active="activeMenu" :collapse="isCollapse" router>...</el-menu></el-scrollbar>
+    </el-aside>
+    <el-container class="main-container">
+      <el-header class="header">...</el-header>
+      <el-main class="main"><router-view /></el-main>
+    </el-container>
+  </div>
+</template>
+      ]]></code>
+    </component>
+
+    <component id="GisMap" file="GisMap.vue">
+      <structure>
+        <element name="div" class="gis-map-container" description="地图容器"/>
+        <element name="div" class="map" description="Leaflet地图元素"/>
+      </structure>
+      <features>多源底图切换、管线图层渲染、缺陷图层渲染、缩放级别适配、点击事件</features>
+      <props>
+        <prop name="center" type="[number, number]" default="[39.9, 116.4]" description="地图中心点"/>
+        <prop name="zoom" type="number" default="12" description="缩放级别"/>
+        <prop name="pipelines" type="GeoJSONFeatureCollection" description="管线GeoJSON数据"/>
+        <prop name="defects" type="GeoJSONFeatureCollection" description="缺陷GeoJSON数据"/>
+      </props>
+      <events>
+        <event name="click-pipeline" description="点击管线"/>
+        <event name="click-defect" description="点击缺陷"/>
+        <event name="map-ready" description="地图初始化完成"/>
+      </events>
+      <tile-services>
+        <service name="高德地图" url="https://webrd0{s}.is.autonavi.com/appmaptile?style=8"/>
+        <service name="天地图" url="https://t{s}.tianditu.gov.cn/vec_w/wmts"/>
+        <service name="OpenStreetMap" url="https://{s}.tile.openstreetmap.org"/>
+        <service name="CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager"/>
+      </tile-services>
+    </component>
+
+    <component id="FileUpload" file="FileUpload.vue">
+      <structure>
+        <element name="el-upload" description="Element Plus上传组件封装"/>
+      </structure>
+      <features>拖拽上传、文件大小限制、文件类型校验、进度回调</features>
+      <props>
+        <prop name="uploadUrl" type="string" description="上传地址"/>
+        <prop name="multiple" type="boolean" default="true"/>
+        <prop name="limit" type="number" default="10"/>
+        <prop name="accept" type="string" description="接受的文件类型"/>
+        <prop name="maxSize" type="number" default="10" description="最大文件大小(MB)"/>
+        <prop name="drag" type="boolean" default="false"/>
+      </props>
+      <events>success, error, remove, preview, progress</events>
+    </component>
+
+    <component id="DefectChart" file="DefectChart.vue">
+      <structure>
+        <element name="div" class="chart-container" description="ECharts图表容器"/>
+      </structure>
+      <features>支持pie/bar/line/ring四种图表类型</features>
+      <props>
+        <prop name="type" type="string" description="图表类型"/>
+        <prop name="data" type="Array" description="图表数据"/>
+        <prop name="title" type="string" description="图表标题"/>
+        <prop name="height" type="string" description="图表高度"/>
+      </props>
+    </component>
+
+  </components>
+
+  <!-- ============================================ -->
+  <!-- 8. 页面视图 -->
+  <!-- ============================================ -->
+  <views path="src/views/">
+    
+    <view id="Login" file="login/index.vue">
+      <features>登录/注册切换、粒子动画背景、表单验证、默认账号提示</features>
+      <forms>
+        <form id="loginForm" fields="username, password" rules="必填、长度校验"/>
+        <form id="registerForm" fields="username, password, realName?" rules="必填、长度校验"/>
+      </forms>
+      <default-credentials>admin / admin123</default-credentials>
+      <code><![CDATA[
+<template>
+  <div class="login-wrapper">
+    <div class="login-particles"><div v-for="n in 20" class="particle"/></div>
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo-circle"><img src="@/assets/logo.svg"/></div>
+        <h1 class="title">UPIDS</h1>
+        <p class="subtitle">地下管线智能缺陷检测系统</p>
+      </div>
+      <el-form v-if="!isRegister" :model="loginForm" @keyup.enter="handleLogin">
+        <el-form-item prop="username"><el-input v-model="loginForm.username" placeholder="请输入用户名"/></el-form-item>
+        <el-form-item prop="password"><el-input v-model="loginForm.password" type="password" placeholder="请输入密码"/></el-form-item>
+        <el-form-item><el-button type="primary" @click="handleLogin">登录</el-button></el-form-item>
+      </el-form>
+      <el-form v-else :model="registerForm">...</el-form>
+      <div class="login-footer">...</div>
+    </div>
+  </div>
+</template>
+      ]]></code>
+    </view>
+
+    <view id="Dashboard" file="dashboard/index.vue">
+      <features>统计卡片、缺陷趋势图、最新预警列表、最新任务列表、快捷操作</features>
+      <statistics>
+        <stat-card name="管线总数" icon="Connection"/>
+        <stat-card name="检测总数" icon="Document"/>
+        <stat-card name="缺陷总数" icon="Warning"/>
+        <stat-card name="未读预警" icon="Bell"/>
+        <stat-card name="待处理任务" icon="Clock"/>
+        <stat-card name="运行中任务" icon="Loading"/>
+        <stat-card name="已完成任务" icon="CircleCheck"/>
+        <stat-card name="失败任务" icon="CircleClose"/>
+      </statistics>
+      <charts>
+        <chart name="缺陷趋势" type="line" source="ECharts"/>
+      </charts>
+      <lists>
+        <list name="最新预警" api="getAlertList" limit="5"/>
+        <list name="最新任务" api="getTaskList" limit="5"/>
+      </lists>
+    </view>
+
+    <view id="Pipeline" file="pipeline/index.vue">
+      <features>管线列表、条件筛选、导入数据、详情弹窗、删除功能</features>
+      <filters>
+        <filter name="keyword" type="input" placeholder="管线编号/名称"/>
+        <filter name="materialType" type="select" options="steel, cast_iron, PE, PVC, concrete"/>
+        <filter name="regionCode" type="input" placeholder="区域编码"/>
+        <filter name="status" type="select" options="正常(1), 异常(0)"/>
+        <filter name="dateRange" type="daterange"/>
+      </filters>
+      <table-columns>pipelineId, pipelineName, materialType, diameter, regionCode, installTime, defectCount, status, createdAt</table-columns>
+      <actions>详情、删除(admin)</actions>
+      <import>支持GeoJSON和Excel格式</import>
+    </view>
+
+    <view id="Inspection" file="inspection/index.vue">
+      <features>图像上传、检测记录列表、图像预览、详情弹窗</features>
+      <filters>
+        <filter name="keyword" type="input" placeholder="管线ID"/>
+        <filter name="detectionResult" type="select" options="normal, crack, corrosion, fracture"/>
+        <filter name="dateRange" type="daterange"/>
+      </filters>
+      <table-columns>recordId, pipelineId, imageName, detectionResult, confidenceScore, inspectTime</table-columns>
+      <actions>详情、查看图像</actions>
+      <upload>支持单张图像上传，关联管线ID</upload>
+    </view>
+
+    <view id="GIS" file="gis/index.vue">
+      <features>地图控制面板、图层开关、缺陷筛选、管线/缺陷详情弹窗</features>
+      <control-panel>
+        <toggle name="管线图层" v-model="showPipelineLayer"/>
+        <toggle name="缺陷图层" v-model="showDefectLayer"/>
+        <filter name="缺陷类型" type="select" options="crack, corrosion, fracture"/>
+        <filter name="最低严重等级" type="slider" min="1" max="5"/>
+      </control-panel>
+      <legend>
+        <item color="#409eff" label="管线"/>
+        <item color="#f56c6c" label="高等级缺陷(4-5)"/>
+        <item color="#e6a23c" label="中等级缺陷(2-3)"/>
+        <item color="#f9e56b" label="低等级缺陷(1)"/>
+      </legend>
+    </view>
+
+    <view id="Statistics" file="statistics/index.vue">
+      <features>时间筛选、6个统计图表、最新缺陷/任务列表</features>
+      <filters>
+        <filter name="dateRange" type="daterange" shortcuts="最近一周, 最近一月, 最近三月"/>
+        <filter name="regionCode" type="input" placeholder="区域编码"/>
+      </filters>
+      <charts>
+        <chart name="缺陷类型分布" type="pie"/>
+        <chart name="缺陷严重等级分布" type="bar"/>
+        <chart name="缺陷趋势" type="line"/>
+        <chart name="任务状态分布" type="ring"/>
+        <chart name="管线区域分布" type="bar"/>
+        <chart name="管线材质分布" type="pie"/>
+      </charts>
+    </view>
+
+    <view id="Alert" file="alert/index.vue">
+      <features>预警列表、筛选、批量标记已读、跳转GIS</features>
+      <filters>
+        <filter name="isRead" type="select" options="未读(false), 已读(true)"/>
+        <filter name="alertType" type="select" options="threshold, anomaly"/>
+        <filter name="pipelineId" type="input"/>
+        <filter name="minLevel" type="input-number" min="1" max="5"/>
+        <filter name="dateRange" type="daterange"/>
+      </filters>
+      <table-columns>alertId, alertType, alertLevel, pipelineId, alertMessage, isRead, triggeredAt</table-columns>
+      <actions>标记已读、详情、查看缺陷</actions>
+      <badge>未读预警数量</badge>
+    </view>
+
+    <view id="Report" file="report/index.vue">
+      <features>报告列表、生成报告、详情展示</features>
+      <filters>
+        <filter name="keyword" type="input" placeholder="报告标题"/>
+        <filter name="regionCode" type="input" placeholder="区域编码"/>
+        <filter name="dateRange" type="daterange"/>
+      </filters>
+      <table-columns>reportId, reportTitle, regionCode, 时间范围, totalDefects, highRiskCount, createdAt</table-columns>
+      <generate-form>reportTitle, regionCode?, dateRange</generate-form>
+      <report-content>缺陷类型分布、缺陷等级分布、高风险管线、区域缺陷分布、缺陷详情、建议措施</report-content>
+    </view>
+
+    <view id="Task" file="task/index.vue">
+      <features>任务列表、条件筛选、自动刷新、重试失败任务</features>
+      <filters>
+        <filter name="status" type="select" options="pending, running, done, failed"/>
+        <filter name="detectionResult" type="select" options="none, normal, crack, corrosion, fracture"/>
+        <filter name="pipelineName" type="input"/>
+        <filter name="dateRange" type="daterange"/>
+      </filters>
+      <table-columns>taskId, recordId, pipelineName, status, progress, retryCount, imageName, detectionResult, confidenceScore, defectCount, highRiskCount, durationSeconds, errorMessage, createdAt</table-columns>
+      <actions>详情、重试(失败任务)</actions>
+      <auto-refresh>有pending/running任务时每3秒自动刷新</auto-refresh>
+    </view>
+
+    <view id="System" file="system/index.vue">
+      <features>用户管理、操作日志、模拟数据生成</features>
+      <tabs>
+        <tab name="user">
+          <filters>username, role, status</filters>
+          <table-columns>id, username, role, status, createdAt</table-columns>
+          <actions>禁用/启用、重置密码</actions>
+          <create-form>username, password, realName?, role</create-form>
+        </tab>
+        <tab name="log">
+          <filters>operation, username, module, dateRange</filters>
+          <table-columns>logId, module, operation, username, requestUri, result, ipAddress, createdAt</table-columns>
+        </tab>
+        <tab name="mock">
+          <form-fields>pipelineCount(10-10000), inspectionCount(10-50000), defectRatio(0-1), historyYears(1-10)</form-fields>
+        </tab>
+      </tabs>
+    </view>
+
+    <view id="Forbidden" file="error/403.vue">
+      <content>无权限访问页面</content>
+    </view>
+
+    <view id="NotFound" file="error/404.vue">
+      <content>页面不存在</content>
+    </view>
+
+  </views>
+
+  <!-- ============================================ -->
+  <!-- 9. 工具函数 -->
+  <!-- ============================================ -->
+  <utils path="src/utils/">
+    <utility id="format" file="format.ts">
+      <function name="formatDateTime" params="date: string | Date, format?: string" returns="string">
+        <description>格式化日期时间，默认格式YYYY-MM-DD HH:mm:ss</description>
+      </function>
+      <function name="formatDate" params="date: string | Date" returns="string">
+        <description>格式化日期(不含时间)</description>
+      </function>
+      <function name="formatRelativeTime" params="date: string | Date" returns="string">
+        <description>格式化相对时间(如3分钟前、2小时前)</description>
+      </function>
+    </utility>
+  </utils>
+
+  <!-- ============================================ -->
+  <!-- 10. 组合式函数 -->
+  <!-- ============================================ -->
+  <composables path="src/composables/">
+    <composable id="useTableHeight" file="useTableHeight.ts">
+      <description>计算表格高度的组合式函数，根据容器高度动态计算</description>
+      <params>selector: string</params>
+      <returns>
+        <return name="tableHeight" type="number"/>
+        <return name="updateHeight" type="function"/>
+      </returns>
+    </composable>
+  </composables>
+
+  <!-- ============================================ -->
+  <!-- 11. 类型定义 -->
+  <!-- ============================================ -->
+  <types path="src/types/api.ts">
+    <interface name="ApiResult<T>">
+      <field name="code" type="number"/>
+      <field name="message" type="string"/>
+      <field name="data" type="T"/>
+      <field name="timestamp" type="number"/>
+    </interface>
+    <interface name="PageResult<T>">
+      <field name="list" type="T[]"/>
+      <field name="total" type="number"/>
+      <field name="page" type="number"/>
+      <field name="pageSize" type="number"/>
+    </interface>
+    <interface name="UserInfo">
+      <field name="id" type="number"/>
+      <field name="username" type="string"/>
+      <field name="realName" type="string"/>
+      <field name="role" type="'admin' | 'user'"/>
+      <field name="status" type="number"/>
+    </interface>
+    <interface name="LoginParams">
+      <field name="username" type="string"/>
+      <field name="password" type="string"/>
+    </interface>
+    <interface name="PipelineVO">
+      <field name="pipelineId" type="string"/>
+      <field name="pipelineName" type="string"/>
+      <field name="materialType" type="string"/>
+      <field name="diameter" type="number"/>
+      <field name="installTime" type="string"/>
+      <field name="regionCode" type="string"/>
+      <field name="status" type="number"/>
+      <field name="defectCount" type="number?"/>
+    </interface>
+    <interface name="DefectVO">
+      <field name="defectId" type="number"/>
+      <field name="recordId" type="number"/>
+      <field name="pipelineId" type="string"/>
+      <field name="defectType" type="'none' | 'crack' | 'corrosion' | 'fracture'"/>
+      <field name="severityLevel" type="number"/>
+      <field name="confidenceScore" type="number"/>
+      <field name="source" type="'rule' | 'ai' | 'fusion'"/>
+      <field name="location" type="{ lng: number; lat: number }?"/>
+      <field name="detectedAt" type="string"/>
+    </interface>
+    <interface name="TaskVO">
+      <field name="taskId" type="number"/>
+      <field name="recordId" type="number"/>
+      <field name="pipelineId" type="string?"/>
+      <field name="status" type="'pending' | 'running' | 'done' | 'failed'"/>
+      <field name="retryCount" type="number"/>
+      <field name="detectionResult" type="string?"/>
+      <field name="confidenceScore" type="number?"/>
+      <field name="defectCount" type="number?"/>
+    </interface>
+    <interface name="AlertVO">
+      <field name="alertId" type="number"/>
+      <field name="defectId" type="number"/>
+      <field name="pipelineId" type="string"/>
+      <field name="alertLevel" type="number"/>
+      <field name="alertType" type="'threshold' | 'anomaly'"/>
+      <field name="alertMessage" type="string"/>
+      <field name="isRead" type="boolean"/>
+      <field name="triggeredAt" type="string"/>
+    </interface>
+    <interface name="StatisticsOverviewVO">
+      <field name="summary" type="{ pipelineCount, inspectionCount, defectCount, alertCount, highRiskCount }"/>
+      <field name="defectByType" type="Array&lt;{ type, count }&gt;"/>
+      <field name="defectBySeverity" type="Array&lt;{ level, count }&gt;"/>
+      <field name="defectTrend" type="Array&lt;{ date, count }&gt;"/>
+      <field name="taskStatusDistribution" type="Array&lt;{ status, count }&gt;"/>
+      <field name="pipelineByRegion" type="Array&lt;{ region, count }&gt;"/>
+      <field name="pipelineByMaterial" type="Array&lt;{ material, count }&gt;"/>
+    </interface>
+    <interface name="GeoJSONFeatureCollection">
+      <field name="type" type="'FeatureCollection'"/>
+      <field name="features" type="GeoJSONFeature[]"/>
+    </interface>
+    <interface name="GeoJSONFeature">
+      <field name="type" type="'Feature'"/>
+      <field name="geometry" type="{ type: 'LineString' | 'Point'; coordinates: number[] | number[][] }"/>
+      <field name="properties" type="Record&lt;string, any&gt;"/>
+    </interface>
+  </types>
+
+  <!-- ============================================ -->
+  <!-- 12. 构建配置 -->
+  <!-- ============================================ -->
+  <build path="vite.config.ts">
+    <config>
+      <plugin name="vue"/>
+      <resolve>
+        <alias key="@" value="src/"/>
+      </resolve>
+      <server>
+        <port>3000</port>
+        <proxy path="/api" target="http://localhost:8080" changeOrigin="true"/>
+      </server>
+    </config>
+    <scripts>
+      <script name="dev" command="vite"/>
+      <script name="build" command="vue-tsc && vite build"/>
+      <script name="preview" command="vite preview"/>
+    </scripts>
+    <dependencies>
+      <dependency name="vue" version="^3.4.21"/>
+      <dependency name="vue-router" version="^4.3.0"/>
+      <dependency name="pinia" version="^2.1.7"/>
+      <dependency name="axios" version="^1.6.8"/>
+      <dependency name="element-plus" version="^2.6.1"/>
+      <dependency name="@element-plus/icons-vue" version="^2.3.1"/>
+      <dependency name="leaflet" version="^1.9.4"/>
+      <dependency name="echarts" version="^5.5.0"/>
+    </dependencies>
+    <dev-dependencies>
+      <dependency name="@vitejs/plugin-vue" version="^5.0.4"/>
+      <dependency name="vite" version="^5.2.0"/>
+      <dependency name="typescript" version="^5.4.2"/>
+      <dependency name="vue-tsc" version="^2.0.6"/>
+      <dependency name="sass" version="^1.72.0"/>
+    </dev-dependencies>
+  </build>
+
+</frontend>

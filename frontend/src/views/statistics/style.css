@@ -1,0 +1,42 @@
+.statistics-page {
+  height: 100%;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statistics-page .filter-card {
+  flex-shrink: 0;
+}
+
+.summary-row {
+  flex-shrink: 0;
+}
+
+.summary-card {
+  text-align: center;
+  height: 100%;
+}
+
+.summary-card .summary-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #303133;
+  line-height: 1.2;
+}
+
+.summary-card .summary-label {
+  font-size: 13px;
+  color: #909399;
+  margin-top: 8px;
+}
+
+.summary-card.highlight .summary-value {
+  color: #f56c6c;
+}
+
+.chart-row {
+  flex-shrink: 0;
+}

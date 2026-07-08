@@ -1,0 +1,204 @@
+# ==================== Java / Spring Boot ====================
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# Gradle
+.gradle/
+build/
+
+# Spring Boot
+backend/.spring-boot-devtools.properties
+
+# ==================== Node.js / Vue ====================
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Build outputs
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# Logs
+frontend/logs/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# Editor directories and files
+frontend/.vscode/*
+frontend/.idea
+frontend/*.suo
+frontend/*.ntvs*
+frontend/*.njsproj
+frontend/*.sln
+frontend/*.sw?
+
+# ==================== Python ====================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+python-service/build/
+python-service/develop-eggs/
+python-service/dist/
+python-service/downloads/
+python-service/eggs/
+python-service/.eggs/
+python-service/lib/
+python-service/lib64/
+python-service/parts/
+python-service/sdist/
+python-service/var/
+python-service/wheels/
+python-service/*.egg-info/
+python-service/.installed.cfg
+python-service/*.egg
+python-service/Pipfile
+python-service/Pipfile.lock
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+python-service/.env
+
+# ==================== Database ====================
+# Docker volumes (local data)
+postgres-data/
+redis-data/
+pgadmin-data/
+
+# Database backups
+database/backup/
+sql/backup/
+*.sql.backup
+
+# ==================== Uploads ====================
+# Uploaded files (images, documents)
+uploads/
+backend/uploads/
+
+# ==================== IDE ====================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.settings/
+.classpath
+.project
+.metadata/
+bin/
+tmp/
+
+# VS Code
+.vscode/
+
+# NetBeans
+nb-configuration.xml
+nbproject/
+
+# ==================== OS ====================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# ==================== Project Specific ====================
+# Ignore sensitive configuration
+backend/src/main/resources/application-prod.yml
+backend/src/main/resources/secrets/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Lock files
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Credentials (never commit)
+*.pem
+*.key
+credentials.json
+secrets.json
+
+
+python-service/data/

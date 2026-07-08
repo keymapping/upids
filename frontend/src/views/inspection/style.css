@@ -1,0 +1,31 @@
+@import '../../styles/tablePage.css';
+
+.text-muted {
+  color: #909399;
+}
+
+.table-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.image-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-error {
+  width: 80px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  border-radius: 4px;
+  color: #c0c4cc;
+  font-size: 12px;
+}

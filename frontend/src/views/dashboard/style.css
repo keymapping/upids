@@ -1,0 +1,187 @@
+.dashboard-container {
+  height: 100%;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 统计卡片 */
+.stat-card {
+  height: 100%;
+}
+
+.stat-card .card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-card .card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.stat-card .card-icon.pipeline {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.stat-card .card-icon.inspection {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+}
+
+.stat-card .card-icon.defect {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.stat-card .card-icon.alert {
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+}
+
+.stat-card .card-icon.pending {
+  background: linear-gradient(135deg, #fa709a, #fee140);
+}
+
+.stat-card .card-icon.running {
+  background: linear-gradient(135deg, #a8edea, #fed6e3);
+}
+
+.stat-card .card-icon.completed {
+  background: linear-gradient(135deg, #84fab0, #8fd3f4);
+}
+
+.stat-card .card-icon.failed {
+  background: linear-gradient(135deg, #ff9a9e, #fecfef);
+}
+
+.stat-card .card-info .card-label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.stat-card .card-info .card-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.stat-card .card-info .alert-value {
+  color: #f56c6c;
+}
+
+/* 内容区域 */
+.content-row {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 趋势图 */
+.trend-card {
+  height: 100%;
+}
+
+.trend-chart {
+  height: 280px;
+}
+
+/* 列表卡片 */
+.list-card {
+  height: 100%;
+}
+
+.recent-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item .item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item .level-tag {
+  flex-shrink: 0;
+}
+
+.list-item .item-text {
+  font-size: 13px;
+  color: #606266;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-item .item-time {
+  font-size: 12px;
+  color: #909399;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* 快捷操作 */
+.quick-card {
+  height: 100%;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f5f7fa;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-item:hover {
+  background: #ecf5ff;
+  transform: translateY(-2px);
+}
+
+.action-item span {
+  font-size: 13px;
+  color: #606266;
+}

@@ -1,0 +1,91 @@
+/**
+ * 通用表格页面样式
+ * 所有包含表格的页面共享此样式
+ */
+.page-container {
+  height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-container .el-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-container .el-card__header {
+  flex-shrink: 0;
+}
+
+.page-container .el-card__body {
+  flex: 1;
+  padding: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.page-container .el-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-container .el-tabs__header {
+  flex-shrink: 0;
+}
+
+.page-container .el-tabs__content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.page-container .el-tab-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.page-container .filter-section {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.page-container .table-wrapper {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.page-container .table-wrapper .el-table__body-wrapper {
+  overflow-y: auto;
+}
+
+.page-container .pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.page-container .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-container .page-title {
+  font-size: 16px;
+  font-weight: 600;
+}
